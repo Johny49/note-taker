@@ -1,7 +1,7 @@
 const express = require('express');
+const { v4: uuidv4 } = require('uuid'); // for creating unique id for each note - uuidv4(); 
 const path = require('path');
 const fs = require('fs');
-const { v4: uuid } = require('uuid'); // for creating unique id for each note - uuidv4(); 
 
 const PORT = process.env.PORT || 3001;
 
@@ -19,26 +19,16 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static('public'));
 
-// GET Route for homepage
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '/public/index.html'))
-});
-
-// GET Route for notes page
-app.get('/notes', (req, res) => {
-    res.sendFile(path.join(__dirname, '/public/notes.html'))
-});
-
 // GET Request for notes
 app.get('/api/notes', (req, res) => {
-    // Send message to the client
-    res.json(`${req.method} request received to get notes`);
+    // Send notes to the client
+    res.json(readNotes());
 
     // Log request to terminal
     console.info(`${req.method} request received to get notes`);
 });
 
-// POST Request to add a review 
+// POST Request to add a note 
 app.post('/api/notes', (req, res) => {
     // Log that POST was received
     console.info(`${req.method} request was received to add a note`);
@@ -77,6 +67,16 @@ app.post('/api/notes', (req, res) => {
     } else {
         res.status(500).json('Error in saving note');
     }
+});
+
+// GET Route for notes page
+app.get('/notes', (req, res) => {
+    res.sendFile(path.join(__dirname, '/public/notes.html'))
+});
+
+// GET Route for homepage
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '/public/index.html'))
 });
 
 app.listen(PORT, () => console.log(`Note Taker App listening at https:localhost:${PORT}`));
