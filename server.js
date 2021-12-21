@@ -13,6 +13,18 @@ const readNotes = () => {
     return notesData;
 };
 
+const writeNotes = (noteData) => {
+    // Convert note data to string
+    const noteString = JSON.stringify(noteData, null, 2);
+
+    // Write the string to db.json
+    fs.writeFile('./db/db.json', noteString, (err) => {
+        err
+            ? console.error(err)
+            : console.log(`New note has been saved`)
+    });
+};
+
 // middleware for parsing json and urlencoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -44,18 +56,12 @@ app.post('/api/notes', (req, res) => {
             text,
         };
 
+        // retrieve note data and add new note
         const noteData = readNotes();
         noteData.push(newNote);
 
-        // Convert note data to string
-        const noteString = JSON.stringify(noteData, null, 2);
-
-        // Write the string to db.json
-        fs.writeFile('./db/db.json', noteString, (err) => {
-            err
-                ? console.error(err)
-                : console.log(`Note with title ${newNote.title} has been written`)
-        });
+        // call function to write note data to db.json
+        writeNotes(noteData);
 
         const response = {
             status: 'Success',
@@ -69,12 +75,27 @@ app.post('/api/notes', (req, res) => {
     }
 });
 
+// DELETE Request to remove a note based on id received
+app.delete(`/api/notes/:id`, (req, res) => {
+    const { id } = req.params;
+    res.send(`Note ${id} deleted`);
+
+    // Log request to terminal
+    console.info(`${req.method} request received to delete note ${id}`);
+
+    // retrieve saved notes and filter to remove the note with the received id
+    const notes = readNotes().filter(note => note.id !== id);
+
+    // Save updated notes
+    writeNotes(notes);
+});
+
 // GET Route for notes page
 app.get('/notes', (req, res) => {
     res.sendFile(path.join(__dirname, '/public/notes.html'))
 });
 
-// GET Route for homepage
+// GET Route for homepage -- listed last to prevent capture of other requests
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '/public/index.html'))
 });
